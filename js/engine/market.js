@@ -344,12 +344,14 @@ export function doPachinko() {
 
   // Start position — randomise slightly so it doesn't always come from dead centre
   let bx = W / 2 + (Math.random() - 0.5) * 40;
-  let by = -6, vx = (Math.random() - 0.5) * 1.5, vy = 2;
+  let by = 6, vx = (Math.random() - 0.5) * 1.5, vy = 2;
   const trail = [];
+  let frame = 0;
 
   function step() {
-    // Physics
-    const pull = Math.pow(by / H, 1.5) * 0.04;
+    frame++;
+    // Physics — pull only applies once ball is on board (by > 0)
+    const pull = Math.pow(Math.max(0, by) / H, 1.5) * 0.04;
     vx += (targetX - bx) * pull;
     vy += 0.18;
     vx *= 0.94;
@@ -382,7 +384,7 @@ export function doPachinko() {
     drawBoard(ctx, W, H, PACHINKO_PEGS);
     drawBall(ctx, bx, by, trail);
 
-    if (by < H - 8) {
+    if (by < H - 8 && frame < 300) {
       _pacAnim = requestAnimationFrame(step);
     } else {
       // Snap ball to final slot centre for clean landing frame

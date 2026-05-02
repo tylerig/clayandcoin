@@ -226,13 +226,11 @@ export function buildPacSlots(litIdx = null) {
 
 function setupCanvas(canvas) {
   const W = 280, H = 160;
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width  = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.width  = W + 'px';
-  canvas.style.height = H + 'px';
+  // Set internal resolution to match CSS size exactly
+  // Doing this every call is safe — it just resets the canvas (which we want anyway)
+  canvas.width  = W;
+  canvas.height = H;
   const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
   return { ctx, W, H };
 }
 

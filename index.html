@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clay &amp; Coin</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/market.css">
+</head>
+<body>
+
+<div style="position:relative;padding:1rem 0;max-width:720px;margin:0 auto">
+  <div class="jw">
+    <div class="sd" id="sd"></div>
+    <div class="journal">
+
+      <div class="jh">
+        <div class="ht">
+          <div class="jt">Clay &amp; Coin</div>
+          <div class="hs">
+            <div class="hst"><div class="hsv" id="gv">20</div><div class="hsl">Gold</div></div>
+            <div class="hst"><div class="hsv" id="av">0</div><div class="hsl">Artifacts</div></div>
+            <div class="hst"><div class="hsv" id="dv">0</div><div class="hsl">Digs</div></div>
+            <button class="gear-btn" id="gear-btn" title="Settings">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.5 1h3l.5 1.5a4.5 4.5 0 0 1 1.2.7L13 2.7l1.5 2.6-1.2 1a4.6 4.6 0 0 1 0 1.4l1.2 1L13 11.3l-1.8-.5a4.5 4.5 0 0 1-1.2.7L9.5 13h-3l-.5-1.5a4.5 4.5 0 0 1-1.2-.7L3 11.3 1.5 8.7l1.2-1a4.6 4.6 0 0 1 0-1.4l-1.2-1L3 2.7l1.8.5A4.5 4.5 0 0 1 6 2.5L6.5 1zm1.5 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" fill="currentColor"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="sbw">
+          <div class="sbl">Challenges:</div>
+          <div class="sbt"><div class="sbf" id="sf" style="width:0%"></div></div>
+          <div class="sbg" id="sg">0/0</div>
+        </div>
+      </div>
+
+      <nav class="jnav">
+        <div class="jni">
+          <button class="nt active" data-tab="team">The Team</button>
+          <button class="nt" data-tab="sites">Dig Sites</button>
+          <button class="nt" data-tab="inv">Inventory</button>
+          <button class="nt" data-tab="clog">Collection</button>
+          <button class="nt" data-tab="craft">Workshop</button>
+          <button class="nt" data-tab="mkt">Market</button>
+          <button class="nt" data-tab="ch">Challenges</button>
+          <button class="nt" data-tab="flog">Field Notes</button>
+          <button class="nt" data-tab="sup">Supplies</button>
+        </div>
+      </nav>
+
+      <div class="jb" id="jb"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="op"></div>
+<div id="settings-portal"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+/* ============================================================
+   BASE — variables, reset, fonts, journal layout
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #1a1208;
+  --ink-mid: rgba(26,18,8,0.65);
+  --ink-faint: rgba(26,18,8,0.38);
+  --paper: #D4C9A8;
+  --paper-mid: #C4B48E;
+  --paper-dark: #B09E78;
+  --paper-darker: #9A8860;
+  --line: #A8966E;
+  --accent: #5C3310;
+  --accent-mid: #7A4A1E;
+  --accent-light: #A0622A;
+  --red: #6B1F0F;
+  --teal: #1A4A3A;
+  --spine: #3D2008;
+  --backroom: #C8B898;
+  --backroom-dark: #B8A080;
+  --bf: 'Crimson Pro', Georgia, serif;
+  --tf: 'Playfair Display', Georgia, serif;
+}
+
+body {
+  background: #2a1a0a;
+  min-height: 100vh;
+}
+
+/* Journal wrapper */
+.jw {
+  background: var(--spine);
+  border-radius: 3px;
+  padding: 6px 6px 6px 14px;
+  position: relative;
+}
+.jw::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 14px;
+  background: var(--spine);
+  border-radius: 3px 0 0 3px;
+}
+.sd {
+  position: absolute;
+  left: 5px; top: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  z-index: 2;
+}
+.sd-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--paper-darker);
+  opacity: 0.6;
+}
+.journal {
+  background: var(--paper);
+  border-radius: 2px;
+  overflow: hidden;
+  font-family: var(--bf);
+  color: var(--ink);
+}
+
+/* Header */
+.jh {
+  background: var(--paper-dark);
+  border-bottom: 2px solid var(--paper-darker);
+  padding: 12px 18px 10px;
+  position: relative;
+}
+.jh::after {
+  content: '';
+  position: absolute;
+  bottom: -5px; left: 0; right: 0;
+  height: 4px;
+  background: repeating-linear-gradient(90deg, var(--line) 0, var(--line) 4px, transparent 4px, transparent 8px);
+  opacity: 0.4;
+}
+.ht {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.jt {
+  font-family: var(--tf);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--ink);
+}
+.hs { display: flex; gap: 18px; align-items: center; }
+.hst { text-align: right; }
+.hsv { font-family: var(--tf); font-size: 18px; font-weight: 500; color: var(--accent); }
+.hsl { font-family: var(--bf); font-size: 9px; color: var(--ink-mid); text-transform: uppercase; letter-spacing: 0.1em; }
+.gear-btn {
+  background: none; border: none; cursor: pointer;
+  padding: 4px; opacity: 0.5; line-height: 1;
+  margin-left: 4px; color: var(--ink);
+}
+.gear-btn:hover { opacity: 1; }
+
+/* Challenge progress bar */
+.sbw { display: flex; align-items: center; gap: 10px; }
+.sbl { font-family: var(--bf); font-size: 10px; color: var(--ink-mid); font-style: italic; white-space: nowrap; }
+.sbt { flex: 1; height: 5px; background: var(--paper-darker); border-radius: 2px; overflow: hidden; }
+.sbf { height: 100%; background: var(--accent-light); border-radius: 2px; transition: width 0.4s; }
+.sbg { font-family: var(--bf); font-size: 10px; color: var(--ink-faint); white-space: nowrap; }
+
+/* Nav */
+.jnav { display: flex; background: var(--paper-mid); border-bottom: 1.5px solid var(--line); padding: 0 18px; }
+.jni { display: flex; flex-wrap: wrap; }
+.nt {
+  font-family: var(--bf); font-size: 12px; letter-spacing: 0.05em;
+  color: var(--ink-mid); padding: 8px 11px;
+  border: none; background: none; cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1.5px;
+  font-style: italic; white-space: nowrap;
+}
+.nt:hover { color: var(--ink); }
+.nt.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; font-style: normal; }
+
+/* Tab body */
+.jb {
+  padding: 18px;
+  background: var(--paper);
+  min-height: 420px;
+  background-image: repeating-linear-gradient(
+    transparent, transparent 27px,
+    rgba(160,140,100,0.25) 27px, rgba(160,140,100,0.25) 28px
+  );
+  background-size: 100% 28px;
+}
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--paper-dark); border: 1px solid var(--line);
+  border-radius: 1px; padding: 9px 13px;
+  font-family: var(--bf); font-size: 13px; color: var(--ink); font-style: italic;
+  opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  max-width: 240px; z-index: 200;
+}
+.toast.show { opacity: 1; }

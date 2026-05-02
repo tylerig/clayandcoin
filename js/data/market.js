@@ -47,14 +47,16 @@ export const PACHINKO_SLOTS = [
 ];
 export const PACHINKO_WEIGHTS = [25, 18, 20, 12, 10, 8, 4, 25];
 
-// Prebuilt peg layout for 280×140 canvas
+// Prebuilt peg layout for 280×160 canvas — 5 rows, staggered
 export const PACHINKO_PEGS = (() => {
-  const pegs = [], rows = 4, cols = 5, W = 280, H = 140;
+  const pegs = [], rows = 5, W = 280, H = 160;
   for (let r = 0; r < rows; r++) {
-    const count = cols + (r % 2 === 0 ? 1 : 0);
+    const stagger = r % 2 === 0;
+    const count   = stagger ? 7 : 6;
+    const marginX = stagger ? 14 : 28;
     for (let c = 0; c < count; c++) {
-      const x = (r % 2 === 0 ? 0 : 18) + c * (W - 36) / (count - 1);
-      const y = 18 + r * (H - 46) / (rows - 1);
+      const x = marginX + c * (W - marginX * 2) / (count - 1);
+      const y = 20 + r * (H - 48) / (rows - 1);
       pegs.push({ x, y });
     }
   }

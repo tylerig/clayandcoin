@@ -9,6 +9,8 @@ import { chkChallenges }   from './engine/challenges.js';
 import { render, tick, sw, updCB } from './ui/render.js';
 import { openSettings }    from './ui/settings.js';
 import { ITEMS }           from './data/items.js';
+import { initFieldEvents } from './engine/field_events_engine.js';
+import './engine/overlays.js'; // ensures bus subscriptions are registered
 
 // ── Boot ──────────────────────────────────────────────────
 
@@ -27,6 +29,9 @@ save();
 
 // Check for challenge completions from loaded state
 chkChallenges();
+
+// Init field event scheduler
+initFieldEvents();
 
 // Initial render
 render();

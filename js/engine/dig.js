@@ -4,7 +4,7 @@
 import { S, save }           from './state.js';
 import { ARCHS, XP_THRESH, MAX_SK } from '../data/archs.js';
 import { SITES, EVENTS }     from '../data/sites.js';
-import { ITEMS, dropWeight, RARITY_ORDER } from '../data/items.js';
+import { ITEMS, dropWeight, RARITY_ORDER, CONDITIONS, CONDITION_MULT } from '../data/items.js';
 import { EQUIP }             from '../data/items.js';
 import { DIG_OPENERS, FIND_PHRASES } from '../data/narrative.js';
 import { addItem, addLog }   from './inventory.js';
@@ -12,6 +12,7 @@ import { chkChallenges }     from './challenges.js';
 import { qOv }               from './overlays.js';
 import { toast }             from '../ui/toast.js';
 import { emit }              from './bus.js';
+import { currentTier }       from './prestige.js';
 
 // ── Helpers ───────────────────────────────────────────────
 
@@ -45,7 +46,30 @@ export function calcLuck(archId, siteId) {
   const site = SITES.find(s => s.id === siteId);
   const eq   = (S.asgn[archId] || []).map(eid => EQUIP.find(e => e.id === eid)).filter(Boolean);
   const bonus = eq.reduce((sum, e) => sum + e.bonus, 0);
-  return site.luck * (1 + bonus * 0.3) * (1 + (currentSkill(archId) - 1) * 0.25);
+  const prestigeBonus = currentTier().bonus.luck || 0;
+  const fieldBonus = S.bonusLuck || 0;
+  return site.luck * (1 + bonus * 0.3) * (1 + (currentSkill(archId) - 1) * 0.25) + prestigeBonus + fieldBonus;
+}
+
+/** Roll a condition based on luck — higher luck = better chance of good condition */
+export function rollCondition(luck) {
+  const r = Math.random();
+  if (luck >= 3.5) {
+    if (r < 0.10) return 'poor';
+    if (r < 0.25) return 'fair';
+    if (r < 0.60) return 'good';
+    return 'excellent';
+  }
+  if (luck >= 2) {
+    if (r < 0.15) return 'poor';
+    if (r < 0.40) return 'fair';
+    if (r < 0.75) return 'good';
+    return 'excellent';
+  }
+  if (r < 0.25) return 'poor';
+  if (r < 0.55) return 'fair';
+  if (r < 0.85) return 'good';
+  return 'excellent';
 }
 
 export function rollLoot(luck, count, siteId) {
@@ -62,7 +86,8 @@ export function rollLoot(luck, count, siteId) {
     let v = Math.random() * total, chosen = RARITY_ORDER[0];
     RARITY_ORDER.forEach((r, i) => { v -= weights[i]; if (v <= 0 && chosen === RARITY_ORDER[0]) chosen = r; });
     const pool = byRarity[chosen] || byRarity['common'];
-    return pool[Math.floor(Math.random() * pool.length)];
+    const id = pool[Math.floor(Math.random() * pool.length)];
+    return { id, condition: rollCondition(luck) };
   });
 }
 
@@ -71,7 +96,7 @@ function rollRecruit(siteId) {
 }
 
 function buildLogEntry(arch, site, loot, ev) {
-  const names  = [...new Set(loot.map(l => ITEMS[l]?.name || l))];
+  const names  = [...new Set(loot.map(l => ITEMS[l.id]?.name || l.id))];
   const opener = pick(DIG_OPENERS)(arch.name, site.name);
   let findStr  = 'Nothing of note was recovered.';
   if (names.length === 1)
@@ -112,7 +137,10 @@ export function collectDig(archId) {
   for (const e of EVENTS) { if (Math.random() < e.chance) { ev = e; break; } }
   if (ev) loot = ev.apply([...loot]);
 
-  loot.forEach(id => addItem(id, 1));
+  // Consume one-time field bonus luck
+  if (S.bonusLuck) S.bonusLuck = 0;
+
+  loot.forEach(({ id, condition }) => addItemWithCondition(id, condition));
   const newSkill = addXP(archId, site.xp + Math.floor(loot.length * 1));
   const recruit  = rollRecruit(dig.site);
 
@@ -132,11 +160,18 @@ export function collectDig(archId) {
   emit('render');
   emit('updCB');
 
-  const totalGold = loot.reduce((sum, id) => (ITEMS[id]?.sellValue || 0) + sum, 0);
+  const totalGold = loot.reduce((sum, { id }) => (ITEMS[id]?.sellValue || 0) + sum, 0);
   if (ev)      qOv({ type: 'event',   ev, arch, site });
   if (recruit) qOv({ type: 'recruit', arch: recruit, site });
   qOv({ type: 'reveal', arch, site, loot, tg: totalGold });
   if (newSkill) qOv({ type: 'levelup', arch, sk: newSkill });
+}
+
+/** Add an item with a specific condition to inventory */
+export function addItemWithCondition(id, condition) {
+  addItem(id, 1);
+  if (!S.invC[id]) S.invC[id] = { poor: 0, fair: 0, good: 0, excellent: 0 };
+  S.invC[id][condition] = (S.invC[id][condition] || 0) + 1;
 }
 
 /** Process a dig that finished while the page was closed */
@@ -148,7 +183,7 @@ export function silentDig(archId) {
   const luck = calcLuck(archId, dig.site);
   const count = Math.max(1, Math.floor(luck + Math.random() * luck));
   const loot  = rollLoot(luck, count, dig.site);
-  loot.forEach(id => addItem(id, 1));
+  loot.forEach(({ id, condition }) => addItemWithCondition(id, condition));
   addXP(archId, site.xp + Math.floor(loot.length * 1));
 
   const recruit = rollRecruit(dig.site);

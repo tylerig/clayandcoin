@@ -22,6 +22,7 @@ function freshValues() {
     asgn: {},
     active: {},
     inv: {},
+    invC: {},       // condition counts: { itemId: { poor:0, fair:0, good:0, excellent:0 } }
     cl: {},
     sh: [],
     ch2: [],
@@ -34,6 +35,9 @@ function freshValues() {
     auctionWins: 0,
     cardDraws: 0,
     pachinkoPlays: 0,
+    prestige: 0,
+    bonusLuck: 0,
+    nextFieldEvent: null,
     settings: {},
     market: {
       auctionRefreshAt: Date.now() + AUCTION_REFRESH_MS,
@@ -75,6 +79,9 @@ export function load(genAuction, genGambleState, genLotteryState) {
     if (!S.auctionWins)         S.auctionWins = 0;
     if (!S.cardDraws)           S.cardDraws = 0;
     if (!S.pachinkoPlays)       S.pachinkoPlays = 0;
+    if (!S.prestige)            S.prestige = 0;
+    if (!S.bonusLuck)           S.bonusLuck = 0;
+    if (!S.invC)                S.invC = {};
     if (!S.market) {
       S.market = {
         auctionRefreshAt: Date.now() + AUCTION_REFRESH_MS,

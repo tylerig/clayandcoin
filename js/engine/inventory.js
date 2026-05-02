@@ -2,8 +2,9 @@
 // INVENTORY — add, remove, sell, craft
 // ============================================================
 import { S, save } from './state.js';
-import { ITEMS }   from '../data/items.js';
+import { ITEMS, CONDITION_MULT } from '../data/items.js';
 import { chkChallenges } from './challenges.js';
+import { onSale }  from './prestige.js';
 import { toast }   from '../ui/toast.js';
 import { emit }    from './bus.js';
 
@@ -24,13 +25,56 @@ export function cntItem(id) {
   return S.inv[id] || 0;
 }
 
+/** Get the effective sell value for one item considering its best available condition */
+export function effectiveSellValue(id) {
+  const item = ITEMS[id]; if (!item) return 0;
+  const conds = S.invC?.[id];
+  if (!conds) return item.sellValue;
+  // Use the best condition available
+  for (const c of ['excellent', 'good', 'fair', 'poor']) {
+    if ((conds[c] || 0) > 0) return Math.round(item.sellValue * CONDITION_MULT[c]);
+  }
+  return item.sellValue;
+}
+
+/** Get condition breakdown string for display */
+export function conditionSummary(id) {
+  const conds = S.invC?.[id]; if (!conds) return '';
+  return ['excellent','good','fair','poor']
+    .filter(c => conds[c] > 0)
+    .map(c => `${conds[c]}× ${c}`)
+    .join(', ');
+}
+
+/** Remove one item, preferring worst condition first (sell poor first) */
+function remOneByCondition(id) {
+  if (!remItem(id, 1)) return 0;
+  const conds = S.invC?.[id];
+  if (conds) {
+    for (const c of ['poor', 'fair', 'good', 'excellent']) {
+      if ((conds[c] || 0) > 0) {
+        conds[c]--;
+        const val = Math.round((ITEMS[id]?.sellValue || 0) * CONDITION_MULT[c]);
+        if (!S.invC[id] || Object.values(S.invC[id]).every(v => v === 0)) delete S.invC[id];
+        return val;
+      }
+    }
+  }
+  return ITEMS[id]?.sellValue || 0;
+}
+
 export function sellIt(id, qty = 1) {
   const item = ITEMS[id];
   if (!item) return;
-  if (!remItem(id, qty)) return;
-  const earned = item.sellValue * qty;
+  let earned = 0;
+  for (let i = 0; i < qty; i++) {
+    const val = remOneByCondition(id);
+    if (val === 0 && i === 0) return; // nothing to sell
+    earned += val;
+  }
   S.gold += earned;
   S.sh.push({ id, qty, gold: earned, ts: Date.now() });
+  onSale(earned);
   save();
   chkChallenges();
   emit('updStats');
@@ -43,11 +87,12 @@ export function sellAllRarity(rarity) {
   if (!ent.length) { toast('Nothing to sell.'); return; }
   let total = 0, count = 0;
   ent.forEach(([id, qty]) => {
-    const e = (ITEMS[id]?.sellValue || 0) * qty;
-    S.gold += e; total += e; count += qty;
-    S.sh.push({ id, qty, gold: e, ts: Date.now() });
-    delete S.inv[id];
+    for (let i = 0; i < qty; i++) total += remOneByCondition(id);
+    count += qty;
+    S.sh.push({ id, qty, gold: total, ts: Date.now() });
   });
+  S.gold += total;
+  onSale(total);
   save(); chkChallenges(); emit('updStats'); emit('render');
   toast(`Sold ${count} ${rarity} item${count > 1 ? 's' : ''} for ${total}g.`);
 }
@@ -57,11 +102,12 @@ export function confirmSellAll() {
   if (!ent.length) { toast('Inventory already empty.'); return; }
   let total = 0, count = 0;
   ent.forEach(([id, qty]) => {
-    const e = (ITEMS[id]?.sellValue || 0) * qty;
-    S.gold += e; total += e; count += qty;
-    S.sh.push({ id, qty, gold: e, ts: Date.now() });
-    delete S.inv[id];
+    for (let i = 0; i < qty; i++) total += remOneByCondition(id);
+    count += qty;
+    S.sh.push({ id, qty, gold: total, ts: Date.now() });
   });
+  S.gold += total;
+  onSale(total);
   save(); chkChallenges(); emit('updStats'); emit('render');
   toast(`Sold everything for ${total}g.`);
 }

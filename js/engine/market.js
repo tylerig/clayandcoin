@@ -224,8 +224,101 @@ export function buildPacSlots(litIdx = null) {
   }).join('');
 }
 
+function setupCanvas(canvas) {
+  const W = 280, H = 160;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  return { ctx, W, H };
+}
+
+function drawBoard(ctx, W, H, pegs) {
+  // Background gradient — dark soil feel
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0,   '#2a1a0a');
+  bg.addColorStop(0.5, '#1e1206');
+  bg.addColorStop(1,   '#150d04');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle vertical lane guides
+  const laneW = W / PACHINKO_SLOTS.length;
+  for (let i = 1; i < PACHINKO_SLOTS.length; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * laneW, 0);
+    ctx.lineTo(i * laneW, H);
+    ctx.strokeStyle = 'rgba(168,150,110,0.06)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Pegs with glow
+  pegs.forEach(p => {
+    // Outer glow
+    const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 10);
+    glow.addColorStop(0,   'rgba(200,170,100,0.25)');
+    glow.addColorStop(1,   'rgba(200,170,100,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, Math.PI * 2); ctx.fill();
+
+    // Peg body
+    const pg = ctx.createRadialGradient(p.x - 1, p.y - 1, 0.5, p.x, p.y, 4.5);
+    pg.addColorStop(0, '#E8D090');
+    pg.addColorStop(0.5, '#B09050');
+    pg.addColorStop(1, '#6A5020');
+    ctx.fillStyle = pg;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI * 2); ctx.fill();
+  });
+}
+
+function drawBall(ctx, bx, by, trail) {
+  // Motion trail
+  trail.forEach((t, i) => {
+    const alpha = (i / trail.length) * 0.35;
+    const r = 5 * (i / trail.length);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#C87820';
+    ctx.beginPath(); ctx.arc(t.x, t.y, r, 0, Math.PI * 2); ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  // Ball shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath(); ctx.ellipse(bx + 1, by + 3, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Ball body with gradient
+  const bg = ctx.createRadialGradient(bx - 2, by - 2, 1, bx, by, 6);
+  bg.addColorStop(0,   '#F0A030');
+  bg.addColorStop(0.4, '#C07020');
+  bg.addColorStop(1,   '#5C3010');
+  ctx.fillStyle = bg;
+  ctx.beginPath(); ctx.arc(bx, by, 6, 0, Math.PI * 2); ctx.fill();
+
+  // Specular highlight
+  ctx.fillStyle = 'rgba(255,230,160,0.6)';
+  ctx.beginPath(); ctx.arc(bx - 2, by - 2, 2, 0, Math.PI * 2); ctx.fill();
+}
+
+function flashSlot(slotIdx, type) {
+  // Flash the slot a few times then settle
+  let flashes = 0;
+  const maxFlashes = 5;
+  const interval = setInterval(() => {
+    buildPacSlots(flashes % 2 === 0 ? slotIdx : null);
+    flashes++;
+    if (flashes >= maxFlashes) {
+      clearInterval(interval);
+      buildPacSlots(slotIdx);
+    }
+  }, 120);
+}
+
 export function doPachinko() {
-  if (_pacRunning)          { toast('Ball still dropping.'); return; }
+  if (_pacRunning)             { toast('Ball still dropping.'); return; }
   if (S.gold < PACHINKO_COST) { toast(`Need ${PACHINKO_COST}g.`); return; }
   S.gold -= PACHINKO_COST;
   S.pachinkoPlays = (S.pachinkoPlays || 0) + 1;
@@ -238,7 +331,7 @@ export function doPachinko() {
   _pacResult = slotIdx;
   _pacRunning = true;
 
-  buildPacSlots(); // clear previous lit
+  buildPacSlots();
   const resEl = document.getElementById('pac-result');
   if (resEl) resEl.textContent = '';
   const btn = document.getElementById('pac-btn');
@@ -247,48 +340,68 @@ export function doPachinko() {
   const canvas = document.getElementById('pac-canvas');
   if (!canvas) { _pacRunning = false; finishPachinko(slotIdx); return; }
 
-  const ctx = canvas.getContext('2d');
-  const W = 280, H = 140, sw = W / PACHINKO_SLOTS.length;
+  const { ctx, W, H } = setupCanvas(canvas);
+  const sw = W / PACHINKO_SLOTS.length;
   const targetX = sw * slotIdx + sw / 2;
-  let bx = W / 2, by = 8, vx = 0, vy = 1.8, frame = 0;
+
+  // Start position — randomise slightly so it doesn't always come from dead centre
+  let bx = W / 2 + (Math.random() - 0.5) * 40;
+  let by = -6, vx = (Math.random() - 0.5) * 1.5, vy = 2;
+  const trail = [];
 
   function step() {
-    ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = 'rgba(154,136,96,0.7)';
-    PACHINKO_PEGS.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill(); });
+    // Physics
+    const pull = Math.pow(by / H, 1.5) * 0.04;
+    vx += (targetX - bx) * pull;
+    vy += 0.18;
+    vx *= 0.94;
+    bx += vx;
+    by += vy;
 
-    const pull = (by / H) * 0.03;
-    bx += (targetX - bx) * pull + vx;
-    by += vy; vy += 0.14; vx *= 0.92;
-
+    // Peg collisions
     PACHINKO_PEGS.forEach(p => {
-      const dx = bx - p.x, dy = by - p.y, d = Math.sqrt(dx * dx + dy * dy);
-      if (d < 9) { bx += dx / d * (9 - d); by += dy / d * (9 - d); vx += (dx / d) * 1.5 + (Math.random() - 0.5) * 1.2; vy = Math.abs(vy) * 0.7 + 0.5; }
+      const dx = bx - p.x, dy = by - p.y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < 11) {
+        const nx = dx / d, ny = dy / d;
+        bx = p.x + nx * 11;
+        by = p.y + ny * 11;
+        const dot = vx * nx + vy * ny;
+        vx = (vx - 2 * dot * nx) * 0.55 + (Math.random() - 0.5) * 1.8;
+        vy = (vy - 2 * dot * ny) * 0.55 + Math.abs(vy) * 0.3 + 0.5;
+      }
     });
-    if (bx < 6)     { bx = 6;     vx =  Math.abs(vx) * 0.6; }
-    if (bx > W - 6) { bx = W - 6; vx = -Math.abs(vx) * 0.6; }
 
-    ctx.fillStyle = '#5C3310';
-    ctx.beginPath(); ctx.arc(bx, by, 5, 0, Math.PI * 2); ctx.fill();
-    frame++;
+    // Wall bounce
+    if (bx < 7)     { bx = 7;     vx =  Math.abs(vx) * 0.5; }
+    if (bx > W - 7) { bx = W - 7; vx = -Math.abs(vx) * 0.5; }
 
-    if (by < H - 14 && frame < 150) {
+    // Trail
+    trail.push({ x: bx, y: by });
+    if (trail.length > 10) trail.shift();
+
+    // Draw
+    drawBoard(ctx, W, H, PACHINKO_PEGS);
+    drawBall(ctx, bx, by, trail);
+
+    if (by < H - 8) {
       _pacAnim = requestAnimationFrame(step);
     } else {
+      // Snap ball to final slot centre for clean landing frame
+      const finalX = sw * slotIdx + sw / 2;
+      drawBoard(ctx, W, H, PACHINKO_PEGS);
+      drawBall(ctx, finalX, H - 8, []);
+
       cancelAnimationFrame(_pacAnim);
       _pacRunning = false;
-      // Final draw
-      ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = 'rgba(154,136,96,0.7)';
-      PACHINKO_PEGS.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill(); });
-      ctx.fillStyle = '#5C3310';
-      ctx.beginPath(); ctx.arc(sw * slotIdx + sw / 2, H - 10, 5, 0, Math.PI * 2); ctx.fill();
-      // Light slot via direct DOM
-      buildPacSlots(slotIdx);
       const b = document.getElementById('pac-btn'); if (b) b.disabled = false;
+      flashSlot(slotIdx, PACHINKO_SLOTS[slotIdx].type);
       finishPachinko(slotIdx);
     }
   }
+
+  // Draw initial board before first frame
+  drawBoard(ctx, W, H, PACHINKO_PEGS);
   _pacAnim = requestAnimationFrame(step);
 }
 

@@ -7,6 +7,8 @@ import { challengeProgress } from '../engine/challenges.js';
 import { digDuration }     from '../engine/dig.js';
 import { SITES }           from '../data/sites.js';
 import { on }              from '../engine/bus.js';
+import { currentTier, nextTier, prestigePct, getPrestige } from '../engine/prestige.js';
+import { chkFieldEvent }   from '../engine/field_events_engine.js';
 
 import { renderTeam }       from './tabs/team.js';
 import { renderSites }      from './tabs/sites.js';
@@ -46,6 +48,12 @@ export function updStats() {
   document.getElementById('gv').textContent = S.gold;
   document.getElementById('av').textContent = Object.values(S.inv).reduce((a, b) => a + b, 0);
   document.getElementById('dv').textContent = S.digs;
+  // Update prestige meter
+  const tier = currentTier();
+  const next = nextTier();
+  const pv = document.getElementById('prestige-val'); if (pv) pv.textContent = tier.label;
+  const pf = document.getElementById('prestige-fill'); if (pf) pf.style.width = prestigePct() + '%';
+  const pt = document.getElementById('prestige-tip'); if (pt) pt.textContent = next ? `${getPrestige()}/${next.min} rep` : 'Max';
 }
 
 export function updCB() {
@@ -75,6 +83,7 @@ export function tick() {
   updStats();
   const changed = chkMarketRefresh();
   if (changed && currentTab === 'mkt') { render(); return; }
+  chkFieldEvent();
 
   const now = Date.now();
   let needsRender = false;

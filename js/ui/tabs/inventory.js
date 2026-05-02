@@ -2,9 +2,9 @@
 // TAB — Inventory
 // ============================================================
 import { S }          from '../../engine/state.js';
-import { ITEMS, RARITY_ORDER, RARITY_STAMP } from '../../data/items.js';
+import { ITEMS, RARITY_ORDER, RARITY_STAMP, CONDITION_COLOR, CONDITION_LABEL } from '../../data/items.js';
 import { pxImg }      from '../sprites.js';
-import { sellIt, sellAllRarity, confirmSellAll } from '../../engine/inventory.js';
+import { sellIt, sellAllRarity, confirmSellAll, effectiveSellValue, conditionSummary } from '../../engine/inventory.js';
 import { render }     from '../render.js';
 
 export let _sellAllConfirm = false;
@@ -52,10 +52,15 @@ export function renderInventory() {
     const rVal = byRarity[r].reduce((s, { id, qty }) => s + (ITEMS[id]?.sellValue || 0) * qty, 0);
     h += `<div class="lsh"><span>${r}</span><button class="jb2 sell-all" onclick="window._sellAllRarity('${r}')" style="font-size:9px;padding:1px 6px">Sell all (${rVal}g)</button></div>`;
     byRarity[r].forEach(({ id, qty, item }) => {
+      const sv   = effectiveSellValue(id);
+      const csum = conditionSummary(id);
       h += `<div class="lrow">
-        <div class="lname"><div class="pb" style="padding:2px">${pxImg(id, 20)}</div>${item.name}</div>
+        <div class="lname" style="flex-direction:column;align-items:flex-start;gap:2px">
+          <div style="display:flex;align-items:center;gap:8px"><div class="pb" style="padding:2px">${pxImg(id, 20)}</div>${item.name}</div>
+          ${csum ? `<div style="font-family:var(--bf);font-size:10px;color:var(--ink-faint);font-style:italic;padding-left:28px">${csum}</div>` : ''}
+        </div>
         <div class="lval"><span class="stamp ${RARITY_STAMP[r]}">${r}</span></div>
-        <div class="lval">${item.sellValue}g</div>
+        <div class="lval">${sv}g</div>
         <div class="lval qty">${qty}</div>
         <div class="lval"><button class="jb2 sell" onclick="window._sellIt('${id}',1)">Sell 1</button></div>
       </div>`;

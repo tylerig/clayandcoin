@@ -50,6 +50,12 @@ export const EQUIP = [
 // Rarity display order (highest first)
 export const RARITY_ORDER = ['epic', 'rare', 'uncommon', 'common'];
 
+// Item condition labels and sell value multipliers
+export const CONDITIONS = ['poor', 'fair', 'good', 'excellent'];
+export const CONDITION_MULT = { poor: 0.5, fair: 0.8, good: 1.0, excellent: 1.3 };
+export const CONDITION_LABEL = { poor: 'Poor', fair: 'Fair', good: 'Good', excellent: 'Excellent' };
+export const CONDITION_COLOR = { poor: 'var(--red)', fair: 'var(--ink-mid)', good: 'var(--teal)', excellent: 'var(--accent-light)' };
+
 // CSS class per rarity stamp
 export const RARITY_STAMP = { common: 'sg', uncommon: 'st', rare: 'sa', epic: 'sr2' };
 

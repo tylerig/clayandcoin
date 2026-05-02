@@ -169,7 +169,7 @@ export function renderMarket() {
     <div class="br-mkt-header"><div class="br-mkt-title">Dig Pachinko</div></div>
     <div class="br-mkt-intro">Drop a token for ${PACHINKO_COST}g. Watch it fall through the strata. Where it lands is your find — or your loss. Unlimited plays.</div>
     <div class="pac-block">
-      <canvas id="pac-canvas" width="280" height="140"></canvas>
+      <canvas id="pac-canvas" width="280" height="160"></canvas>
       <div class="pac-slots" id="pac-slots">${PACHINKO_SLOTS.map(sl => `<div class="pac-slot">${sl.label}</div>`).join('')}</div>
     </div>
     <div class="pac-result" id="pac-result"></div>

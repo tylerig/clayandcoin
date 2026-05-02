@@ -1,74 +1,76 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clay &amp; Coin</title>
-  <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/market.css">
-</head>
-<body>
+// ============================================================
+// TAB — Inventory
+// ============================================================
+import { S }          from '../../engine/state.js';
+import { ITEMS, RARITY_ORDER, RARITY_STAMP, CONDITION_COLOR, CONDITION_LABEL } from '../../data/items.js';
+import { pxImg }      from '../sprites.js';
+import { sellIt, sellAllRarity, confirmSellAll, effectiveSellValue, conditionSummary } from '../../engine/inventory.js';
+import { render }     from '../render.js';
 
-<div style="position:relative;padding:1rem 0;max-width:720px;margin:0 auto">
-  <div class="jw">
-    <div class="sd" id="sd"></div>
-    <div class="journal">
+export let _sellAllConfirm = false;
 
-      <div class="jh">
-        <div class="ht">
-          <div class="jt">Clay &amp; Coin</div>
-          <div class="hs">
-            <div class="hst"><div class="hsv" id="gv">20</div><div class="hsl">Gold</div></div>
-            <div class="hst"><div class="hsv" id="av">0</div><div class="hsl">Artifacts</div></div>
-            <div class="hst"><div class="hsv" id="dv">0</div><div class="hsl">Digs</div></div>
-            <button class="gear-btn" id="gear-btn" title="Settings">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.5 1h3l.5 1.5a4.5 4.5 0 0 1 1.2.7L13 2.7l1.5 2.6-1.2 1a4.6 4.6 0 0 1 0 1.4l1.2 1L13 11.3l-1.8-.5a4.5 4.5 0 0 1-1.2.7L9.5 13h-3l-.5-1.5a4.5 4.5 0 0 1-1.2-.7L3 11.3 1.5 8.7l1.2-1a4.6 4.6 0 0 1 0-1.4l-1.2-1L3 2.7l1.8.5A4.5 4.5 0 0 1 6 2.5L6.5 1zm1.5 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" fill="currentColor"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div class="sbw">
-          <div class="sbl">Reputation:</div>
-          <div class="sbt"><div class="sbf" id="prestige-fill" style="width:0%;background:var(--teal)"></div></div>
-          <div class="sbg" id="prestige-val">Unknown</div>
-          <div class="sbg" id="prestige-tip" style="margin-left:4px"></div>
-        </div>
-        <div class="sbw" style="margin-top:4px">
-          <div class="sbl">Challenges:</div>
-          <div class="sbt"><div class="sbf" id="sf" style="width:0%"></div></div>
-          <div class="sbg" id="sg">0/0</div>
-        </div>
+export function renderInventory() {
+  const entries = Object.entries(S.inv).filter(([, q]) => q > 0);
+  if (!entries.length) return `<div class="en">Your inventory is empty.<br>Send the team on a dig to begin.</div>`;
+
+  const byRarity = {};
+  entries.forEach(([id, qty]) => {
+    const item = ITEMS[id]; if (!item) return;
+    (byRarity[item.rarity] = byRarity[item.rarity] || []).push({ id, qty, item });
+  });
+
+  const totalItems = entries.reduce((s, [, q]) => s + q, 0);
+  const totalSell  = entries.reduce((s, [id, q]) => s + (ITEMS[id]?.sellValue || 0) * q, 0);
+  const totalTypes = Object.keys(S.cl).length;
+
+  let h = `
+    <div class="invs">
+      <div><div class="isv">${totalItems}</div><div class="isl">Items held</div></div>
+      <div><div class="isv">${totalTypes}</div><div class="isl">Types found</div></div>
+      <div><div class="isv">${totalSell}g</div><div class="isl">Est. sell value</div></div>
+    </div>`;
+
+  if (_sellAllConfirm) {
+    h += `<div class="bulk-sell-bar" style="background:rgba(107,31,15,0.08);border:1px dashed var(--red);border-radius:1px;padding:10px;display:block">
+      <div style="font-family:var(--bf);font-size:12px;color:var(--red);font-style:italic;margin-bottom:8px">Sell everything in your inventory? This cannot be undone.</div>
+      <div style="display:flex;gap:8px">
+        <button class="jb2 danger" onclick="window._confirmSellAll()">Yes, sell everything</button>
+        <button class="jb2" onclick="window._cancelSellAll()">Cancel</button>
       </div>
+    </div>`;
+  } else {
+    h += `<div class="bulk-sell-bar">
+      <span style="font-family:var(--bf);font-size:11px;color:var(--ink-faint);font-style:italic;align-self:center">Bulk sell:</span>
+      ${RARITY_ORDER.filter(r => byRarity[r]).map(r => `<button class="jb2 sell-all" onclick="window._sellAllRarity('${r}')">All ${r}</button>`).join('')}
+      <button class="jb2 sell-all" onclick="window._askSellAll()" style="border-color:var(--red);color:var(--red)">Sell everything</button>
+    </div>`;
+  }
 
-      <nav class="jnav">
-        <div class="jni">
-          <button class="nt active" data-tab="team">The Team</button>
-          <button class="nt" data-tab="sites">Dig Sites</button>
-          <button class="nt" data-tab="inv">Inventory</button>
-          <button class="nt" data-tab="clog">Collection</button>
-          <button class="nt" data-tab="craft">Workshop</button>
-          <button class="nt" data-tab="mkt">Market</button>
-          <button class="nt" data-tab="ch">Challenges</button>
-          <button class="nt" data-tab="flog">Field Notes</button>
-          <button class="nt" data-tab="sup">Supplies</button>
+  h += `<div class="lh"><span>Artifact</span><span>Rarity</span><span>Each</span><span>Qty</span><span>Action</span></div>`;
+
+  RARITY_ORDER.filter(r => byRarity[r]).forEach(r => {
+    const rVal = byRarity[r].reduce((s, { id, qty }) => s + (ITEMS[id]?.sellValue || 0) * qty, 0);
+    h += `<div class="lsh"><span>${r}</span><button class="jb2 sell-all" onclick="window._sellAllRarity('${r}')" style="font-size:9px;padding:1px 6px">Sell all (${rVal}g)</button></div>`;
+    byRarity[r].forEach(({ id, qty, item }) => {
+      const sv   = effectiveSellValue(id);
+      const csum = conditionSummary(id);
+      h += `<div class="lrow">
+        <div class="lname" style="flex-direction:column;align-items:flex-start;gap:2px">
+          <div style="display:flex;align-items:center;gap:8px"><div class="pb" style="padding:2px">${pxImg(id, 20)}</div>${item.name}</div>
+          ${csum ? `<div style="font-family:var(--bf);font-size:10px;color:var(--ink-faint);font-style:italic;padding-left:28px">${csum}</div>` : ''}
         </div>
-      </nav>
+        <div class="lval"><span class="stamp ${RARITY_STAMP[r]}">${r}</span></div>
+        <div class="lval">${sv}g</div>
+        <div class="lval qty">${qty}</div>
+        <div class="lval"><button class="jb2 sell" onclick="window._sellIt('${id}',1)">Sell 1</button></div>
+      </div>`;
+    });
+  });
+  return h;
+}
 
-      <div class="jb" id="jb"></div>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-<div id="op"></div>
-<div id="settings-portal"></div>
-
-<script type="module" src="js/main.js"></script>
-</body>
-</html>
+window._sellIt         = (id, qty) => sellIt(id, qty);
+window._sellAllRarity  = (r) => sellAllRarity(r);
+window._askSellAll     = () => { _sellAllConfirm = true; render(); };
+window._cancelSellAll  = () => { _sellAllConfirm = false; render(); };
+window._confirmSellAll = () => { _sellAllConfirm = false; confirmSellAll(); };

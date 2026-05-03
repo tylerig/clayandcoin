@@ -46,7 +46,7 @@ function freshValues() {
       auctions: null,
       gamble: null,
       cardDeck: null,
-      cardDeckUsed: true,
+      cardDeckUsed: false,
       lottery: null,
     },
   };
@@ -89,16 +89,16 @@ export function load(genAuction, genGambleState, genLotteryState) {
         auctionRefreshAt: Date.now() + AUCTION_REFRESH_MS,
         gambleRefreshAt:  Date.now() + GAMBLE_REFRESH_MS,
         auctions: null, gamble: null,
-        cardDeck: null, cardDeckUsed: true, lottery: null,
+        cardDeck: null, cardDeckUsed: false, lottery: null,
       };
     }
-    if (S.market.cardDeckUsed === undefined) S.market.cardDeckUsed = true;
+    if (S.market.cardDeckUsed === undefined) S.market.cardDeckUsed = false;
     // Refresh cycles that expired while away
     if (Date.now() >= S.market.auctionRefreshAt) {
       S.market.auctions        = genAuction();
       S.market.auctionRefreshAt = Date.now() + AUCTION_REFRESH_MS;
       S.market.cardDeck        = null;
-      S.market.cardDeckUsed    = true;
+      S.market.cardDeckUsed    = false;
       S.market.lottery         = genLotteryState();
     }
     if (Date.now() >= S.market.gambleRefreshAt) {

@@ -66,7 +66,7 @@ export function chkMarketRefresh() {
     S.market.auctions         = genAuction();
     S.market.auctionRefreshAt = now + AUCTION_REFRESH_MS;
     S.market.cardDeck         = null;
-    S.market.cardDeckUsed     = true;
+    S.market.cardDeckUsed     = false;
     S.market.lottery          = genLotteryState();
     changed = true;
   }

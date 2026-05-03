@@ -34,8 +34,10 @@ function statLine(eq) {
 export function renderSupplies() {
   const recruited = ARCHS.filter(a => S.ra.includes(a.id));
 
-  // Sort by cost ascending
-  const sorted = [...EQUIP].sort((a, b) => a.cost - b.cost);
+  // Split into two groups, each sorted by cost ascending
+  const standard   = [...EQUIP].filter(e => !e.tradeoff).sort((a, b) => a.cost - b.cost);
+  const tradeoffs  = [...EQUIP].filter(e =>  e.tradeoff).sort((a, b) => a.cost - b.cost);
+  const sorted     = [...standard, ...tradeoffs];
 
   // Divider between standard and double-edged
   let lastWasStandard = true;

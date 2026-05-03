@@ -49,11 +49,17 @@ export function renderTeam() {
             </div>
             ${eq.length ? (() => {
               const totalLuck  = eq.reduce((s, e) => s + e.bonus, 0);
-              const totalSpeed = Math.min(0.5, eq.reduce((s, e) => s + (e.speedBonus || 0), 0));
+              const netSpeed   = eq.reduce((s, e) => s + (e.speedBonus || 0) - (e.speedPenalty || 0), 0);
+              const clamped    = Math.max(-1.0, Math.min(0.5, netSpeed));
+              const speedTxt   = clamped >= 0
+                ? `-${Math.round(clamped * 100)}% time`
+                : `+${Math.round(Math.abs(clamped) * 100)}% time`;
+              const speedColor = clamped >= 0 ? 'var(--teal)' : 'var(--red)';
+              const extras     = eq.flatMap(e => e.tradeoff ? [e.tradeoff] : []);
               return `<div style="margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-                ${eq.map(e => `<span class="stamp sg">${e.name}</span>`).join('')}
-                <span style="font-family:var(--bf);font-size:11px;color:var(--ink-mid);font-style:italic;margin-left:2px;font-weight:500">
-                  +${totalLuck.toFixed(1)} luck &middot; -${Math.round(totalSpeed * 100)}% time
+                ${eq.map(e => `<span class="stamp ${e.tradeoff ? 'sr2' : 'sg'}">${e.name}</span>`).join('')}
+                <span style="font-family:var(--bf);font-size:12px;color:var(--ink-mid);font-style:italic;margin-left:2px;font-weight:500">
+                  +${totalLuck.toFixed(1)} luck &middot; <span style="color:${speedColor}">${speedTxt}</span>
                 </span>
               </div>`;
             })() : ''}

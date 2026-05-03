@@ -22,12 +22,13 @@ export function digDuration(site) {
   return site.duration;
 }
 
-/** Duration in seconds accounting for equipped speed bonuses. Capped at 50% reduction. */
+/** Duration in seconds accounting for equipped speed bonuses and penalties. Net reduction capped at 50%. */
 export function calcDigDuration(archId, siteId) {
   const site = SITES.find(s => s.id === siteId) || { duration: 60 };
   const eq   = (S.asgn[archId] || []).map(eid => EQUIP.find(e => e.id === eid)).filter(Boolean);
-  const speedReduction = Math.min(0.5, eq.reduce((sum, e) => sum + (e.speedBonus || 0), 0));
-  return Math.round(site.duration * (1 - speedReduction));
+  const netSpeed = eq.reduce((sum, e) => sum + (e.speedBonus || 0) - (e.speedPenalty || 0), 0);
+  const clamped  = Math.max(-1.0, Math.min(0.5, netSpeed)); // max 50% faster, no cap on slower
+  return Math.round(site.duration * (1 - clamped));
 }
 
 export function currentSkill(archId) {
@@ -59,28 +60,26 @@ export function calcLuck(archId, siteId) {
   return site.luck * (1 + bonus * 0.3) * (1 + (currentSkill(archId) - 1) * 0.25) + prestigeBonus + fieldBonus;
 }
 
-/** Roll a condition based on luck — higher luck = better chance of good condition */
-export function rollCondition(luck) {
+/** Roll a condition based on luck and an optional condition shift (-ve = worse, +ve = better) */
+export function rollCondition(luck, condShift = 0) {
   const r = Math.random();
-  if (luck >= 3.5) {
-    if (r < 0.10) return 'poor';
-    if (r < 0.25) return 'fair';
-    if (r < 0.60) return 'good';
-    return 'excellent';
-  }
-  if (luck >= 2) {
-    if (r < 0.15) return 'poor';
-    if (r < 0.40) return 'fair';
-    if (r < 0.75) return 'good';
-    return 'excellent';
-  }
-  if (r < 0.25) return 'poor';
-  if (r < 0.55) return 'fair';
-  if (r < 0.85) return 'good';
+  // Build thresholds then shift them
+  let thresholds;
+  if (luck >= 3.5)      thresholds = [0.10, 0.25, 0.60]; // poor/fair/good/excellent
+  else if (luck >= 2)   thresholds = [0.15, 0.40, 0.75];
+  else                  thresholds = [0.25, 0.55, 0.85];
+
+  // condShift moves thresholds — positive = harder to get poor, easier to get excellent
+  const shift = condShift * 0.08;
+  const [t1, t2, t3] = thresholds.map(t => Math.max(0, Math.min(1, t - shift)));
+
+  if (r < t1) return 'poor';
+  if (r < t2) return 'fair';
+  if (r < t3) return 'good';
   return 'excellent';
 }
 
-export function rollLoot(luck, count, siteId) {
+export function rollLoot(luck, count, siteId, condShift = 0) {
   const byRarity = {};
   Object.entries(ITEMS).filter(([, v]) => !v.craftable).forEach(([key, v]) => {
     if (v.sites && !v.sites.includes(siteId)) return;
@@ -95,7 +94,7 @@ export function rollLoot(luck, count, siteId) {
     RARITY_ORDER.forEach((r, i) => { v -= weights[i]; if (v <= 0 && chosen === RARITY_ORDER[0]) chosen = r; });
     const pool = byRarity[chosen] || byRarity['common'];
     const id = pool[Math.floor(Math.random() * pool.length)];
-    return { id, condition: rollCondition(luck) };
+    return { id, condition: rollCondition(luck, condShift) };
   });
 }
 
@@ -140,16 +139,26 @@ export function collectDig(archId) {
   const luck = calcLuck(archId, dig.site);
   const count = Math.max(1, Math.floor(luck + Math.random() * luck));
 
-  let loot = rollLoot(luck, count, dig.site);
+  // Gather double-edged equipment effects
+  const eq         = (S.asgn[archId] || []).map(eid => EQUIP.find(e => e.id === eid)).filter(Boolean);
+  const condShift  = eq.reduce((sum, e) => sum + (e.conditionBonus || 0), 0);
+  const xpMult     = eq.reduce((sum, e) => sum + (e.xpBonus || 0), 0) || 1;
+  const extraEvent = eq.reduce((sum, e) => sum + (e.eventChance || 0), 0);
+
+  let loot = rollLoot(luck, count, dig.site, condShift);
   let ev   = null;
-  for (const e of EVENTS) { if (Math.random() < e.chance) { ev = e; break; } }
+  const totalEventChance = extraEvent;
+  for (const e of EVENTS) {
+    if (Math.random() < e.chance + totalEventChance) { ev = e; break; }
+  }
   if (ev) loot = ev.apply([...loot]);
 
   // Consume one-time field bonus luck (positive or negative — applies once then clears)
   if (S.bonusLuck !== 0) S.bonusLuck = 0;
 
   loot.forEach(({ id, condition }) => addItemWithCondition(id, condition));
-  const newSkill = addXP(archId, site.xp + Math.floor(loot.length * 1));
+  const xpEarned = Math.round((site.xp + Math.floor(loot.length * 1)) * xpMult);
+  const newSkill = addXP(archId, xpEarned);
   const recruit  = rollRecruit(dig.site);
 
   if (recruit) {

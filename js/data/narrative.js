@@ -86,6 +86,11 @@ export const SPRITES = {
   theodolite:      ["...AA...","..AAAA..","..A..A..","...AA...","..AAAA..",".AAAAAA.","...AA...",".AAAAAA."],
   field_lab:       [".DDDDDD.","D5D5D5DD","DDDDDDDD","D.D..D.D","D......D","DDDDDDDD",".D.DD.D.","........"],
   lidar:           ["..9999..","999F9F99","9F.FF.F9","F9FFFF9F","F9FFFF9F","9F.FF.F9","..9FF9..","...99..."],
+  heavy_rig:       ["AAAAAAAA","A.A..A.A","AAAAAAAA","8888888A","8......A","8.AAAA.A","8......A","88888888"],
+  chem_kit:        ["...BB...","..B55B..","..B55B..",".BBBBBB.",".B....B.","BB....BB","B.BBBB.B","BBBBBBBB"],
+  archive:         [".DDDDDD.","DAAAAAAD","DA.AA.AD","DAAAAAAD","DA.AA.AD","DAAAAAAD","D.DDDD.D",".DDDDDD."],
+  magneto:         ["9.....9.","99...99.","9.9.9.9.","..999...","..9.9...","..999...","...9....","...9...."],
+  nightvis:        ["........","33....33","333..333",".333333.","..3333..","..3..3..","..3..3..","........"],
   // Back Room
   card_back:       ["8888888A","8B5B5B8A","8B.B.B8A","8585858A","8.8.8.8A","8585858A","8B.B.B8A","8888888A"],
   ticket:          ["AAAAAAAAA","A.....AA","AFFFFF.A","AFBBBFAA","AFBBBFAA","AFFFFFAA","A.....AA","AAAAAAAA"],

@@ -44,7 +44,13 @@ export const EQUIP = [
   { id: 'drone',      name: 'Survey drone',        desc: 'Full overhead mapping',              bonus: 1.0, cost: 420,  speedBonus: 0.10 },
   { id: 'theodolite', name: 'Tripod theodolite',   desc: 'Precision angular measurement',      bonus: 1.2, cost: 600,  speedBonus: 0.12 },
   { id: 'field_lab',  name: 'Portable field lab',  desc: 'On-site analysis and dating',        bonus: 1.5, cost: 850,  speedBonus: 0.15 },
-  { id: 'lidar',      name: 'LiDAR scanner',       desc: 'Sub-centimetre terrain mapping',     bonus: 2.0, cost: 1300, speedBonus: 0.20 },
+  { id: 'lidar',      name: 'LiDAR scanner',         desc: 'Sub-centimetre terrain mapping',     bonus: 2.0, cost: 1300, speedBonus: 0.20 },
+  // ── Double-edged equipment ─────────────────────────────
+  { id: 'heavy_rig',  name: 'Heavy excavation rig',   desc: 'Massive luck boost. Slow to set up and break down.',                              bonus: 2.5, cost: 900,  speedBonus: 0,    speedPenalty: 0.40, tradeoff: '+40% dig time' },
+  { id: 'chem_kit',   name: 'Chemical analysis kit',  desc: 'Dramatically improves item condition. Setup time is considerable.',               bonus: 0.5, cost: 700,  speedBonus: 0,    speedPenalty: 0.25, conditionBonus:  2, tradeoff: '+25% dig time, better conditions' },
+  { id: 'archive',    name: 'Archival reference lib.', desc: 'Significant XP boost per dig. The documentation takes time.',                    bonus: 0.3, cost: 500,  speedBonus: 0,    speedPenalty: 0.30, xpBonus: 1.8,       tradeoff: '+30% dig time, +80% XP' },
+  { id: 'magneto',    name: 'Magnetometer array',      desc: 'Very high luck. Sensitive equipment that attracts complications.',               bonus: 3.0, cost: 1100, speedBonus: 0,    speedPenalty: 0.20, eventChance: 0.12,  tradeoff: '+20% dig time, higher event risk' },
+  { id: 'nightvis',   name: 'Night vision equipment',  desc: 'Work in darkness. Dramatically faster, but poor lighting means worse finds.',    bonus: 0.2, cost: 650,  speedBonus: 0.45, conditionBonus: -2,                     tradeoff: '-45% dig time, worse conditions' },
 ];
 
 // Rarity display order (highest first)

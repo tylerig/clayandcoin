@@ -18,7 +18,7 @@ export function renderSupplies() {
           <div class="pb">${pxImg(eq.id, 32)}</div>
           <div style="flex:1">
             <div class="shopn">${eq.name}</div>
-            <div class="shopd">${eq.desc} &mdash; +${eq.bonus} luck, -${Math.round(eq.speedBonus * 100)}% dig time</div>
+            <div class="shopd">${eq.desc} &mdash; +${eq.bonus} luck, -${Math.round((eq.speedBonus||0) * 100)}% dig time${eq.tradeoff ? ` <span style="color:var(--red);font-style:normal">[${eq.tradeoff}]</span>` : ''}</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
             ${owned

@@ -11,7 +11,6 @@ import { openSettings }    from './ui/settings.js';
 import { ITEMS }           from './data/items.js';
 import { initFieldEvents } from './engine/field_events_engine.js';
 import { showWelcomeBack } from './engine/overlays.js';
-import { ITEMS }           from './data/items.js';
 
 // ── Boot ──────────────────────────────────────────────────
 

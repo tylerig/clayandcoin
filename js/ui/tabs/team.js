@@ -52,7 +52,7 @@ export function renderTeam() {
               const totalSpeed = Math.min(0.5, eq.reduce((s, e) => s + (e.speedBonus || 0), 0));
               return `<div style="margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
                 ${eq.map(e => `<span class="stamp sg">${e.name}</span>`).join('')}
-                <span style="font-family:var(--bf);font-size:10px;color:var(--ink-faint);font-style:italic;margin-left:2px">
+                <span style="font-family:var(--bf);font-size:11px;color:var(--ink-mid);font-style:italic;margin-left:2px;font-weight:500">
                   +${totalLuck.toFixed(1)} luck &middot; -${Math.round(totalSpeed * 100)}% time
                 </span>
               </div>`;

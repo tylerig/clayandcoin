@@ -60,11 +60,12 @@ export function renderTeam() {
           </div>`
         : `
           <div class="dr">
-            <select class="ss" id="sel-${arch.id}">
+            <select class="ss" id="sel-${arch.id}" onchange="window._rememberSite('${arch.id}',this.value)">
               <option value="">— select a dig site —</option>
               ${unlockedSites.map(s => {
                 const dur = digDuration(s) >= 60 ? Math.floor(digDuration(s) / 60) + 'm' : digDuration(s) + 's';
-                return `<option value="${s.id}">${s.name} (${dur})</option>`;
+                const sel = (S.lastSite?.[arch.id] === s.id) ? ' selected' : '';
+                return `<option value="${s.id}"${sel}>${s.name} (${dur})</option>`;
               }).join('')}
             </select>
             <button class="jb2 pri" onclick="window._dispatch('${arch.id}')">Begin excavation</button>
@@ -84,5 +85,16 @@ export function renderTeam() {
 }
 
 // Expose for inline onclick
-window._dispatch   = (id) => dispatch(id);
-window._collectDig = (id) => collectDig(id);
+window._dispatch     = (id) => {
+  const sel = document.getElementById('sel-' + id);
+  if (sel?.value) {
+    if (!S.lastSite) S.lastSite = {};
+    S.lastSite[id] = sel.value;
+  }
+  dispatch(id);
+};
+window._rememberSite = (id, val) => {
+  if (!S.lastSite) S.lastSite = {};
+  S.lastSite[id] = val;
+};
+window._collectDig   = (id) => collectDig(id);

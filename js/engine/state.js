@@ -38,6 +38,7 @@ function freshValues() {
     prestige: 0,
     bonusLuck: 0,
     nextFieldEvent: null,
+    lastSite: {},
     settings: {},
     market: {
       auctionRefreshAt: Date.now() + AUCTION_REFRESH_MS,
@@ -82,6 +83,7 @@ export function load(genAuction, genGambleState, genLotteryState) {
     if (!S.prestige)            S.prestige = 0;
     if (!S.bonusLuck)           S.bonusLuck = 0;
     if (!S.invC)                S.invC = {};
+    if (!S.lastSite)            S.lastSite = {};
     if (!S.market) {
       S.market = {
         auctionRefreshAt: Date.now() + AUCTION_REFRESH_MS,

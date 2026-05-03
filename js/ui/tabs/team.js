@@ -6,7 +6,7 @@ import { ARCHS, XP_THRESH, MAX_SK } from '../../data/archs.js';
 import { SITES }         from '../../data/sites.js';
 import { EQUIP }         from '../../data/items.js';
 import { pxImg }         from '../sprites.js';
-import { currentSkill, nextXPThreshold, digDuration, dispatch } from '../../engine/dig.js';
+import { currentSkill, nextXPThreshold, digDuration, calcDigDuration, dispatch } from '../../engine/dig.js';
 import { collectDig }    from '../../engine/dig.js';
 
 function pips(n, max = 4) {
@@ -63,9 +63,13 @@ export function renderTeam() {
             <select class="ss" id="sel-${arch.id}" onchange="window._rememberSite('${arch.id}',this.value)">
               <option value="">— select a dig site —</option>
               ${unlockedSites.map(s => {
-                const dur = digDuration(s) >= 60 ? Math.floor(digDuration(s) / 60) + 'm' : digDuration(s) + 's';
+                const actualDur = calcDigDuration(arch.id, s.id);
+                const baseDur   = digDuration(s);
+                const reduced   = actualDur < baseDur;
+                const fmt = d => d >= 60 ? Math.floor(d / 60) + 'm ' + (d % 60 ? (d % 60) + 's' : '') : d + 's';
+                const label = reduced ? `${s.name} (${fmt(actualDur).trim()} ↑)` : `${s.name} (${fmt(baseDur).trim()})`;
                 const sel = (S.lastSite?.[arch.id] === s.id) ? ' selected' : '';
-                return `<option value="${s.id}"${sel}>${s.name} (${dur})</option>`;
+                return `<option value="${s.id}"${sel}>${label}</option>`;
               }).join('')}
             </select>
             <button class="jb2 pri" onclick="window._dispatch('${arch.id}')">Begin excavation</button>

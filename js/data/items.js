@@ -37,14 +37,14 @@ export const ITEMS = {
 };
 
 export const EQUIP = [
-  { id: 'brush',     name: 'Fine brush',          desc: 'Surface detail work',                bonus: 0.3, cost: 40   },
-  { id: 'sonar',     name: 'Ground sonar',         desc: 'Locates buried chambers',            bonus: 0.5, cost: 110  },
-  { id: 'camera',    name: 'Stereo camera',        desc: '3D site documentation',              bonus: 0.7, cost: 220  },
-  { id: 'detector',  name: 'Metal detector',       desc: 'Traces metal artefacts below grade', bonus: 0.8, cost: 280  },
-  { id: 'drone',     name: 'Survey drone',         desc: 'Full overhead mapping',              bonus: 1.0, cost: 420  },
-  { id: 'theodolite',name: 'Tripod theodolite',    desc: 'Precision angular measurement',      bonus: 1.2, cost: 600  },
-  { id: 'field_lab', name: 'Portable field lab',   desc: 'On-site analysis and dating',        bonus: 1.5, cost: 850  },
-  { id: 'lidar',     name: 'LiDAR scanner',        desc: 'Sub-centimetre terrain mapping',     bonus: 2.0, cost: 1300 },
+  { id: 'brush',      name: 'Fine brush',         desc: 'Surface detail work',                bonus: 0.3, cost: 40,   speedBonus: 0.03 },
+  { id: 'sonar',      name: 'Ground sonar',        desc: 'Locates buried chambers',            bonus: 0.5, cost: 110,  speedBonus: 0.05 },
+  { id: 'camera',     name: 'Stereo camera',       desc: '3D site documentation',              bonus: 0.7, cost: 220,  speedBonus: 0.07 },
+  { id: 'detector',   name: 'Metal detector',      desc: 'Traces metal artefacts below grade', bonus: 0.8, cost: 280,  speedBonus: 0.08 },
+  { id: 'drone',      name: 'Survey drone',        desc: 'Full overhead mapping',              bonus: 1.0, cost: 420,  speedBonus: 0.10 },
+  { id: 'theodolite', name: 'Tripod theodolite',   desc: 'Precision angular measurement',      bonus: 1.2, cost: 600,  speedBonus: 0.12 },
+  { id: 'field_lab',  name: 'Portable field lab',  desc: 'On-site analysis and dating',        bonus: 1.5, cost: 850,  speedBonus: 0.15 },
+  { id: 'lidar',      name: 'LiDAR scanner',       desc: 'Sub-centimetre terrain mapping',     bonus: 2.0, cost: 1300, speedBonus: 0.20 },
 ];
 
 // Rarity display order (highest first)

@@ -120,7 +120,7 @@ export function doGamble(tierId) {
   addItem(itemId, 1);
   addLog(pick(GAMBLE_OPENERS)(tier.name, ITEMS[itemId].name), 'market');
   save(); chkChallenges(); emit('render');
-  qOv({ type: 'reveal', arch: { name: 'The Market' }, site: { name: tier.name }, loot: [itemId], tg: ITEMS[itemId].sellValue });
+  qOv({ type: 'reveal', arch: { name: 'The Market' }, site: { name: tier.name }, loot: [{ id: itemId, condition: 'good' }], tg: ITEMS[itemId].sellValue });
 }
 
 // ── Card Draw ─────────────────────────────────────────────
@@ -199,7 +199,7 @@ export function drawLottery() {
     addItem(prizeId, 1);
     addLog(`Lottery draw: winning number ${winner}. We held that ticket! Prize: a <em>${ITEMS[prizeId]?.name}</em>. <span class="lmkt">[Lottery]</span>`, 'market');
     toast(`Lottery won! ${ITEMS[prizeId]?.name}`);
-    qOv({ type: 'reveal', arch: { name: 'The Lottery' }, site: { name: 'Back Room' }, loot: [prizeId], tg: ITEMS[prizeId]?.sellValue || 0 });
+    qOv({ type: 'reveal', arch: { name: 'The Lottery' }, site: { name: 'Back Room' }, loot: [{ id: prizeId, condition: 'good' }], tg: ITEMS[prizeId]?.sellValue || 0 });
   } else {
     S.market.lottery.prize = null;
     addLog(`Lottery draw: winning number ${winner}. No match. <span class="lmkt">[Lottery]</span>`, 'market');
@@ -422,7 +422,7 @@ function finishPachinko(slotIdx) {
       addItem(id, 1);
       resultText = `Found: ${ITEMS[id].name}`;
       if (rarity === 'rare' || rarity === 'epic')
-        qOv({ type: 'reveal', arch: { name: 'Dig Pachinko' }, site: { name: 'Back Room' }, loot: [id], tg: ITEMS[id].sellValue });
+        qOv({ type: 'reveal', arch: { name: 'Dig Pachinko' }, site: { name: 'Back Room' }, loot: [{ id, condition: 'good' }], tg: ITEMS[id].sellValue });
     }
   }
   addLog(`Pachinko: ball landed on <em>${slot.label}</em>. ${resultText} <span class="lmkt">[Pachinko]</span>`, 'market');

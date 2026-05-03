@@ -22,6 +22,14 @@ export function digDuration(site) {
   return site.duration;
 }
 
+/** Duration in seconds accounting for equipped speed bonuses. Capped at 50% reduction. */
+export function calcDigDuration(archId, siteId) {
+  const site = SITES.find(s => s.id === siteId) || { duration: 60 };
+  const eq   = (S.asgn[archId] || []).map(eid => EQUIP.find(e => e.id === eid)).filter(Boolean);
+  const speedReduction = Math.min(0.5, eq.reduce((sum, e) => sum + (e.speedBonus || 0), 0));
+  return Math.round(site.duration * (1 - speedReduction));
+}
+
 export function currentSkill(archId) {
   const base = ARCHS.find(a => a.id === archId)?.skill || 1;
   const xp   = S.axp[archId] || 0;
@@ -118,7 +126,7 @@ export function dispatch(archId) {
   if (!siteId) { toast('Select a dig site first.'); return; }
   const site = SITES.find(s => s.id === siteId);
   if (!site) return;
-  const dur = digDuration(site);
+  const dur = calcDigDuration(archId, siteId);
   S.active[archId] = { site: siteId, start: Date.now(), end: Date.now() + dur * 1000 };
   save();
   emit('render');

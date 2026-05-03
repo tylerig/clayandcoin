@@ -47,7 +47,16 @@ export function renderTeam() {
               <div class="xt"><div class="xf" style="width:${xpct}%"></div></div>
               <div class="xl">${nx ? xp + '/' + nx + 'xp' : 'Max'}</div>
             </div>
-            ${eq.length ? `<div style="margin-top:5px;display:flex;gap:4px;flex-wrap:wrap">${eq.map(e => `<span class="stamp sg">${e.name}</span>`).join('')}</div>` : ''}
+            ${eq.length ? (() => {
+              const totalLuck  = eq.reduce((s, e) => s + e.bonus, 0);
+              const totalSpeed = Math.min(0.5, eq.reduce((s, e) => s + (e.speedBonus || 0), 0));
+              return `<div style="margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                ${eq.map(e => `<span class="stamp sg">${e.name}</span>`).join('')}
+                <span style="font-family:var(--bf);font-size:10px;color:var(--ink-faint);font-style:italic;margin-left:2px">
+                  +${totalLuck.toFixed(1)} luck &middot; -${Math.round(totalSpeed * 100)}% time
+                </span>
+              </div>`;
+            })() : ''}
           </div>
         </div>
         ${dig ? `

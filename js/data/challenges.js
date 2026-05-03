@@ -2,6 +2,7 @@
 // CHALLENGES
 // ============================================================
 import { ITEMS } from './items.js';
+import { XP_THRESH, MAX_SK } from './archs.js';
 
 // Helper checks — all receive S (game state) and return { cur, tgt }
 const totalEpics  = S => Object.entries(S.cl).filter(([id]) => ITEMS[id]?.rarity === 'epic').reduce((sum, [, v]) => sum + v.tot, 0);
@@ -13,10 +14,7 @@ const monasteryEx = S => ['illum_page','reliquary_cross','monks_seal','codex_ill
 // This prevents newly-recruited high-skill archaeologists from auto-completing
 // skill challenges without the player having actually trained anyone.
 function earnedSkillLevel(S, id) {
-  const XP_THRESH = [0, 0, 80, 220, 500];
-  const MAX_SK = 4;
   const xp = S.axp[id] || 0;
-  // Walk from level 2 upward — only count levels reached by XP alone
   let earned = 1;
   for (let lv = 2; lv <= MAX_SK; lv++) if (xp >= XP_THRESH[lv]) earned = lv;
   return earned;

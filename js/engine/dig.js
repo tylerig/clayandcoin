@@ -137,8 +137,8 @@ export function collectDig(archId) {
   for (const e of EVENTS) { if (Math.random() < e.chance) { ev = e; break; } }
   if (ev) loot = ev.apply([...loot]);
 
-  // Consume one-time field bonus luck
-  if (S.bonusLuck) S.bonusLuck = 0;
+  // Consume one-time field bonus luck (positive or negative — applies once then clears)
+  if (S.bonusLuck !== 0) S.bonusLuck = 0;
 
   loot.forEach(({ id, condition }) => addItemWithCondition(id, condition));
   const newSkill = addXP(archId, site.xp + Math.floor(loot.length * 1));
@@ -185,6 +185,7 @@ export function silentDig(archId) {
   const loot  = rollLoot(luck, count, dig.site);
   loot.forEach(({ id, condition }) => addItemWithCondition(id, condition));
   addXP(archId, site.xp + Math.floor(loot.length * 1));
+  if (S.bonusLuck !== 0) S.bonusLuck = 0;
 
   const recruit = rollRecruit(dig.site);
   if (recruit) {

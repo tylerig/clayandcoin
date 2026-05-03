@@ -2,8 +2,8 @@
 // FIELD EVENTS — random events that fire between digs
 // ============================================================
 
-export const FIELD_EVENT_MIN_MS = 3 * 60 * 1000;
-export const FIELD_EVENT_MAX_MS = 8 * 60 * 1000;
+export const FIELD_EVENT_MIN_MS = 8 * 60 * 1000;
+export const FIELD_EVENT_MAX_MS = 20 * 60 * 1000;
 
 export const FIELD_EVENTS = [
 

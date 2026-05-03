@@ -152,6 +152,9 @@ function _showFieldEvent(o) {
   window._currentFieldEvent = ev;
 }
 
+// Expose advOv globally so inline onclick handlers can call it
+window._advOv = advOv;
+
 // ── Welcome back ──────────────────────────────────────────
 export function showWelcomeBack(returned, ITEMS) {
   const op = document.getElementById('op');

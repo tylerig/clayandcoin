@@ -5,8 +5,7 @@ import { S }             from './state.js';
 import { ITEMS, RARITY_GLOW, RARITY_STAMP, CONDITION_COLOR, CONDITION_LABEL } from '../data/items.js';
 import { SKILL_LABELS }  from '../data/archs.js';
 import { px }            from '../ui/sprites.js';
-import { resolveFieldEvent } from './field_events_engine.js';
-import { on }            from './bus.js';
+import { on, emit }      from './bus.js';
 
 const RECRUIT_GLOW = 'rgba(160,98,42,0.7)';
 
@@ -202,15 +201,16 @@ export function showWelcomeBack(returned, ITEMS) {
 window._resolveFieldEvent = (choiceIdx) => {
   const ev = window._currentFieldEvent;
   if (!ev) return;
-  const result = resolveFieldEvent(ev, choiceIdx);
-  document.getElementById('op').innerHTML = `
-    <div class="ov" onclick="if(event.target===this){this.innerHTML=''}">
-      <div class="ob" style="text-align:left;max-width:340px">
-        <div style="font-family:var(--tf);font-size:15px;font-weight:500;color:var(--ink);margin-bottom:12px">${ev.title}</div>
-        <div style="font-family:var(--bf);font-size:13px;color:var(--ink-mid);font-style:italic;line-height:1.65;margin-bottom:20px">${result}</div>
-        <button class="jb2 pri" style="width:100%" onclick="document.getElementById('op').innerHTML='';window._currentFieldEvent=null">Continue</button>
-      </div>
-    </div>`;
+  emit('resolveFieldEvent', { ev, choiceIdx, onResult: (result) => {
+    document.getElementById('op').innerHTML = `
+      <div class="ov" onclick="if(event.target===this){this.innerHTML=''}">
+        <div class="ob" style="text-align:left;max-width:340px">
+          <div style="font-family:var(--tf);font-size:15px;font-weight:500;color:var(--ink);margin-bottom:12px">${ev.title}</div>
+          <div style="font-family:var(--bf);font-size:13px;color:var(--ink-mid);font-style:italic;line-height:1.65;margin-bottom:20px">${result}</div>
+          <button class="jb2 pri" style="width:100%" onclick="document.getElementById('op').innerHTML='';window._currentFieldEvent=null">Continue</button>
+        </div>
+      </div>`;
+  }});
 };
 
 // Listen for field events fired by the engine tick

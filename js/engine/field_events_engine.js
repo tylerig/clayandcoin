@@ -3,7 +3,7 @@
 // ============================================================
 import { S, save }        from './state.js';
 import { FIELD_EVENTS, FIELD_EVENT_MIN_MS, FIELD_EVENT_MAX_MS } from '../data/field_events.js';
-import { emit }           from './bus.js';
+import { emit, on }       from './bus.js';
 
 function scheduleNext() {
   const delay = FIELD_EVENT_MIN_MS + Math.random() * (FIELD_EVENT_MAX_MS - FIELD_EVENT_MIN_MS);
@@ -31,3 +31,9 @@ export function resolveFieldEvent(ev, choiceIdx) {
   emit('updStats');
   return result;
 }
+
+// Listen for resolve requests from overlays.js (avoids circular dep)
+on('resolveFieldEvent', ({ ev, choiceIdx, onResult }) => {
+  const result = resolveFieldEvent(ev, choiceIdx);
+  onResult(result);
+});

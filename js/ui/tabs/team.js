@@ -22,11 +22,25 @@ export function renderTeam() {
   const recruited = ARCHS.filter(a => S.ra.includes(a.id));
   const locked    = ARCHS.filter(a => !S.ra.includes(a.id));
   const unlockedSites = SITES.filter(s => S.sites.includes(s.id));
+  const now = Date.now();
 
-  let h = recruited.map(arch => {
+  const readyIds = recruited
+    .filter(a => S.active[a.id] && S.active[a.id].end <= now)
+    .map(a => a.id);
+
+  let h = '';
+
+  if (readyIds.length > 1) {
+    h += `<div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+      <button class="jb2 pri" onclick="window._collectAll()">
+        Collect all findings (${readyIds.length})
+      </button>
+    </div>`;
+  }
+
+  h += recruited.map(arch => {
     const dig   = S.active[arch.id];
     const eq    = (S.asgn[arch.id] || []).map(eid => EQUIP.find(e => e.id === eid)).filter(Boolean);
-    const now   = Date.now();
     const ready = dig && dig.end <= now;
     const pct   = dig && !ready ? Math.min(100, Math.round((now - dig.start) / (dig.end - dig.start) * 100)) : 0;
     const sk    = currentSkill(arch.id);
@@ -117,3 +131,8 @@ window._rememberSite = (id, val) => {
   S.lastSite[id] = val;
 };
 window._collectDig   = (id) => collectDig(id);
+window._collectAll   = () => {
+  const now = Date.now();
+  ARCHS.filter(a => S.ra.includes(a.id) && S.active[a.id] && S.active[a.id].end <= now)
+       .forEach(a => collectDig(a.id));
+};

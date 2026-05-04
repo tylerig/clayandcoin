@@ -25,16 +25,16 @@ export function cntItem(id) {
   return S.inv[id] || 0;
 }
 
-/** Get the effective sell value for one item considering its best available condition */
+/** Get the effective sell value for one item considering its best available condition and auth bonus */
 export function effectiveSellValue(id) {
   const item = ITEMS[id]; if (!item) return 0;
   const conds = S.invC?.[id];
-  if (!conds) return item.sellValue;
-  // Use the best condition available
+  const authBonus = (S.authBonus || {})[id] || 0;
+  if (!conds) return item.sellValue + authBonus;
   for (const c of ['excellent', 'good', 'fair', 'poor']) {
-    if ((conds[c] || 0) > 0) return Math.round(item.sellValue * CONDITION_MULT[c]);
+    if ((conds[c] || 0) > 0) return Math.round(item.sellValue * CONDITION_MULT[c]) + authBonus;
   }
-  return item.sellValue;
+  return item.sellValue + authBonus;
 }
 
 /** Get condition breakdown string for display */

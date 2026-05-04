@@ -13,6 +13,7 @@ import { qOv }               from './overlays.js';
 import { toast }             from '../ui/toast.js';
 import { emit }              from './bus.js';
 import { currentTier }       from './prestige.js';
+import { addSiteDepth, applyDepthToWeights } from './site_reputation.js';
 
 // ── Helpers ───────────────────────────────────────────────
 
@@ -88,7 +89,8 @@ export function rollLoot(luck, count, siteId, condShift = 0) {
   RARITY_ORDER.forEach(r => { if (!byRarity[r]) byRarity[r] = byRarity['common'] || ['shard']; });
 
   return Array.from({ length: count }, () => {
-    const weights = RARITY_ORDER.map(r => dropWeight(r, luck));
+    let weights = RARITY_ORDER.map(r => dropWeight(r, luck));
+    weights = applyDepthToWeights(weights, RARITY_ORDER, siteId);
     const total   = weights.reduce((a, b) => a + b, 0);
     let v = Math.random() * total, chosen = RARITY_ORDER[0];
     RARITY_ORDER.forEach((r, i) => { v -= weights[i]; if (v <= 0 && chosen === RARITY_ORDER[0]) chosen = r; });
@@ -169,10 +171,8 @@ export function collectDig(archId) {
   S.digs++;
   S.siteDigCounts = S.siteDigCounts || {};
   S.siteDigCounts[dig.site] = (S.siteDigCounts[dig.site] || 0) + 1;
+  addSiteDepth(dig.site, 1);
   delete S.active[archId];
-
-  save();
-  addLog(buildLogEntry(arch, site, loot, ev), 'dig');
   chkChallenges();
   emit('render');
   emit('updCB');
@@ -213,9 +213,8 @@ export function silentDig(archId) {
   S.digs++;
   S.siteDigCounts = S.siteDigCounts || {};
   S.siteDigCounts[dig.site] = (S.siteDigCounts[dig.site] || 0) + 1;
+  addSiteDepth(dig.site, 1);
   delete S.active[archId];
-
-  addLog(buildLogEntry(arch, site, loot, null), 'dig');
   chkChallenges();
   save();
 

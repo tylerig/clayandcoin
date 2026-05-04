@@ -9,6 +9,8 @@ import { SITES }           from '../data/sites.js';
 import { on }              from '../engine/bus.js';
 import { currentTier, nextTier, prestigePct, getPrestige } from '../engine/prestige.js';
 import { chkFieldEvent }   from '../engine/field_events_engine.js';
+import { chkSiteRecovery } from '../engine/site_reputation.js';
+import { collectResearch } from '../engine/provenance.js';
 
 import { renderTeam }       from './tabs/team.js';
 import { renderSites }      from './tabs/sites.js';
@@ -84,6 +86,12 @@ export function tick() {
   const changed = chkMarketRefresh();
   if (changed && currentTab === 'mkt') { render(); return; }
   chkFieldEvent();
+  chkSiteRecovery();
+  // Check if active research has completed
+  if (S.activeResearch && Date.now() >= S.activeResearch.end) {
+    const result = collectResearch();
+    if (result) render();
+  }
 
   const now = Date.now();
   let needsRender = false;
@@ -104,7 +112,14 @@ export function tick() {
   if (JSON.stringify(S.active) !== _snap) needsRender = true;
   if (needsRender) render();
 
-  // Update market timers in-place to avoid full re-render every second
+  // Update research bar in-place if on craft tab
+  if (currentTab === 'craft' && S.activeResearch && Date.now() < S.activeResearch.end) {
+    const rb = document.getElementById('research-bar');
+    if (rb) {
+      const pct = Math.round((Date.now() - S.activeResearch.start) / (S.activeResearch.end - S.activeResearch.start) * 100);
+      rb.style.width = pct + '%';
+    }
+  }
   if (currentTab === 'mkt') {
     const aucMs = Math.max(0, S.market.auctionRefreshAt - now);
     const gamMs = Math.max(0, S.market.gambleRefreshAt  - now);

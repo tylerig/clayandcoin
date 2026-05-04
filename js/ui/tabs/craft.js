@@ -60,7 +60,7 @@ export function renderCraft() {
           <div class="pb">${pxImg(ar.itemId, 36)}</div>
           <div style="flex:1">
             <div style="font-family:var(--tf);font-size:14px;font-weight:500;color:var(--ink);margin-bottom:3px">${item?.name} <span class="stamp sa" style="margin-left:6px">Under research</span></div>
-            <div style="font-family:var(--bf);font-size:11px;color:var(--ink-faint);font-style:italic">${done ? 'Analysis complete — results pending collection.' : `Results in ${fmtCountdown(ar.end)}`}</div>
+            <div style="font-family:var(--bf);font-size:11px;color:var(--ink-faint);font-style:italic">${done ? 'Analysis complete — results pending collection.' : `Results in <span id="research-countdown">${fmtCountdown(ar.end)}</span>`}</div>
           </div>
         </div>
         <div style="height:4px;background:var(--paper-darker);border-radius:2px;overflow:hidden;margin-bottom:4px">

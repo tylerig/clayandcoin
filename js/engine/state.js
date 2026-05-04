@@ -43,6 +43,7 @@ function freshValues() {
     siteRecovery: {},
     activeResearch: null,
     authBonus: {},
+    invAuth: {},
     settings: {},
     market: {
       auctionRefreshAt: Date.now() + AUCTION_REFRESH_MS,
@@ -91,6 +92,7 @@ export function load(genAuction, genGambleState, genLotteryState) {
     if (!S.siteDepth)           S.siteDepth = {};
     if (!S.siteRecovery)        S.siteRecovery = {};
     if (!S.authBonus)           S.authBonus = {};
+    if (!S.invAuth)             S.invAuth = {};
     if (!S.market) {
       S.market = {
         auctionRefreshAt: Date.now() + AUCTION_REFRESH_MS,

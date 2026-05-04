@@ -112,12 +112,18 @@ export function tick() {
   if (JSON.stringify(S.active) !== _snap) needsRender = true;
   if (needsRender) render();
 
-  // Update research bar in-place if on craft tab
+  // Update research bar and countdown in-place if on craft tab
   if (currentTab === 'craft' && S.activeResearch && Date.now() < S.activeResearch.end) {
     const rb = document.getElementById('research-bar');
+    const rc = document.getElementById('research-countdown');
+    const now2 = Date.now();
     if (rb) {
-      const pct = Math.round((Date.now() - S.activeResearch.start) / (S.activeResearch.end - S.activeResearch.start) * 100);
+      const pct = Math.round((now2 - S.activeResearch.start) / (S.activeResearch.end - S.activeResearch.start) * 100);
       rb.style.width = pct + '%';
+    }
+    if (rc) {
+      const s = Math.max(0, Math.floor((S.activeResearch.end - now2) / 1000));
+      rc.textContent = s >= 60 ? Math.floor(s / 60) + 'm ' + (s % 60) + 's' : s + 's';
     }
   }
   if (currentTab === 'mkt') {

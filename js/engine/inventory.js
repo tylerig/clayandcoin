@@ -25,11 +25,12 @@ export function cntItem(id) {
   return S.inv[id] || 0;
 }
 
-/** Get the effective sell value for one item considering its best available condition and auth bonus */
+/** Get the effective sell value for one item — authenticated items sell for more */
 export function effectiveSellValue(id) {
   const item = ITEMS[id]; if (!item) return 0;
+  const authCount = (S.invAuth || {})[id] || 0;
+  const authBonus = authCount > 0 ? ((S.authBonus || {})[id] || 0) : 0;
   const conds = S.invC?.[id];
-  const authBonus = (S.authBonus || {})[id] || 0;
   if (!conds) return item.sellValue + authBonus;
   for (const c of ['excellent', 'good', 'fair', 'poor']) {
     if ((conds[c] || 0) > 0) return Math.round(item.sellValue * CONDITION_MULT[c]) + authBonus;
@@ -39,23 +40,39 @@ export function effectiveSellValue(id) {
 
 /** Get condition breakdown string for display */
 export function conditionSummary(id) {
-  const conds = S.invC?.[id]; if (!conds) return '';
-  return ['excellent','good','fair','poor']
-    .filter(c => conds[c] > 0)
-    .map(c => `${conds[c]}× ${c}`)
-    .join(', ');
+  const conds  = S.invC?.[id];
+  const auth   = (S.invAuth || {})[id] || 0;
+  const parts  = [];
+  if (auth > 0) parts.push(`${auth}× authenticated`);
+  if (conds) {
+    ['excellent','good','fair','poor'].forEach(c => {
+      if ((conds[c] || 0) > 0) parts.push(`${conds[c]}× ${c}`);
+    });
+  }
+  return parts.join(', ');
 }
 
-/** Remove one item, preferring worst condition first (sell poor first) */
+/** Remove one item, selling authenticated first (highest value), then worst condition */
 function remOneByCondition(id) {
   if (!remItem(id, 1)) return 0;
+  // Sell authenticated first — they're worth the most
+  const authCount = (S.invAuth || {})[id] || 0;
+  if (authCount > 0) {
+    S.invAuth[id]--;
+    if (S.invAuth[id] <= 0) delete S.invAuth[id];
+    const bonus = (S.authBonus || {})[id] || 0;
+    // If no more authenticated, clear the bonus
+    if (!S.invAuth[id]) delete S.authBonus[id];
+    return (ITEMS[id]?.sellValue || 0) + bonus;
+  }
+  // Otherwise sell worst condition first
   const conds = S.invC?.[id];
   if (conds) {
     for (const c of ['poor', 'fair', 'good', 'excellent']) {
       if ((conds[c] || 0) > 0) {
         conds[c]--;
         const val = Math.round((ITEMS[id]?.sellValue || 0) * CONDITION_MULT[c]);
-        if (!S.invC[id] || Object.values(S.invC[id]).every(v => v === 0)) delete S.invC[id];
+        if (Object.values(conds).every(v => v === 0)) delete S.invC[id];
         return val;
       }
     }

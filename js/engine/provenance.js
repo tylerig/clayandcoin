@@ -84,37 +84,36 @@ export function collectResearch() {
   const r = S.activeResearch;
   if (!r || Date.now() < r.end) return;
   const item = ITEMS[r.itemId];
-  const [authBase, misBase, forgBase] = OUTCOMES[item.rarity] || [0.5, 0.3, 0.2];
-  const condBonus = conditionAuthBonus(r.itemId);
-  const authChance = Math.min(0.85, authBase + condBonus);
-  const roll = Math.random();
+  const [authBase, misBase] = OUTCOMES[item.rarity] || [0.5, 0.3, 0.2];
+  const condBonus   = conditionAuthBonus(r.itemId);
+  const authChance  = Math.min(0.85, authBase + condBonus);
+  const roll        = Math.random();
 
-  let outcome, text, valueChange = 0;
+  let outcome, text;
 
   if (roll < authChance) {
     outcome = 'authenticated';
     const bonus = Math.round(item.sellValue * 0.5);
-    valueChange = bonus;
-    // Store authenticated bonus
-    if (!S.authBonus) S.authBonus = {};
-    S.authBonus[r.itemId] = (S.authBonus[r.itemId] || 0) + bonus;
-    // Add back to inventory as authenticated
+    // Store auth bonus per item type
+    if (!S.authBonus)  S.authBonus  = {};
+    S.authBonus[r.itemId] = bonus; // fixed bonus per authenticated instance
+    // Track authenticated count separately
+    if (!S.invAuth)    S.invAuth    = {};
+    S.invAuth[r.itemId] = (S.invAuth[r.itemId] || 0) + 1;
+    // Also add back to regular inv count so total qty is correct
     S.inv[r.itemId] = (S.inv[r.itemId] || 0) + 1;
-    if (!S.invC[r.itemId]) S.invC[r.itemId] = { poor: 0, fair: 0, good: 0, excellent: 0 };
-    S.invC[r.itemId].excellent = (S.invC[r.itemId].excellent || 0) + 1;
-    // Prestige boost for authenticated item
     onSale(item.sellValue * 0.3);
     text = `Authenticated. The ${item.name} has been verified. Sell value increased by ${bonus}g.`;
   } else if (roll < authChance + misBase) {
     outcome = 'misattributed';
-    // Return item but slightly reduced value
+    // Return as fair condition
     S.inv[r.itemId] = (S.inv[r.itemId] || 0) + 1;
     if (!S.invC[r.itemId]) S.invC[r.itemId] = { poor: 0, fair: 0, good: 0, excellent: 0 };
     S.invC[r.itemId].fair = (S.invC[r.itemId].fair || 0) + 1;
-    text = `Misattributed. The ${item.name} is genuine but from a different period than catalogued. Returned to inventory.`;
+    text = `Misattributed. The ${item.name} is genuine but from a different period. Returned to inventory.`;
   } else {
     outcome = 'forgery';
-    // Item is lost — already removed from inventory
+    // Already removed from inventory in startResearch
     S.prestige = Math.max(0, (S.prestige || 0) - 10);
     text = `Forgery detected. The ${item.name} was not what it appeared. It has been removed. -10 reputation.`;
   }
@@ -128,7 +127,9 @@ export function collectResearch() {
   return { outcome, text, item };
 }
 
-/** Effective sell value for an item accounting for auth bonus */
+/** Auth bonus for display — only if authenticated instances exist in inventory */
 export function authenticatedBonus(itemId) {
+  const authCount = (S.invAuth || {})[itemId] || 0;
+  if (!authCount) return 0;
   return (S.authBonus || {})[itemId] || 0;
 }
